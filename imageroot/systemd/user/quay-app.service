@@ -11,6 +11,7 @@ Environment=PODMAN_SYSTEMD_UNIT=%n
 EnvironmentFile=%S/state/environment
 Restart=always
 TimeoutStopSec=70
+ExecStartPre=/usr/bin/podman exec -it quay-db /bin/bash -c 'echo "CREATE EXTENSION IF NOT EXISTS pg_trgm" | psql -d quay -U quay'
 ExecStartPre=/bin/rm -f %t/quay-app.pid %t/quay-app.ctr-id
 ExecStart=/usr/bin/podman run --conmon-pidfile %t/quay-app.pid --cidfile %t/quay-app.ctr-id --cgroups=no-conmon --pod-id-file %t/quay.pod-id --replace -d --name quay-app --privileged -v quay-app-data:/datastorage:z -v %S/state/config.yaml:/conf/stack/config.yaml:z ${QUAY_IMAGE}
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/quay-app.ctr-id -t 10
