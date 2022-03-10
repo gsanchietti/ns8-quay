@@ -32,23 +32,26 @@ Output example:
 
 Let's assume that the quay instance is named `quay1`.
 
-Launch `configure-module`, by setting the following parameters:
-- `<MODULE_PARAM1_NAME>`: <MODULE_PARAM1_DESCRIPTION>
-- `<MODULE_PARAM2_NAME>`: <MODULE_PARAM2_DESCRIPTION>
-- ...
+Required parameters:
+- host: host name of the quay server
+
+Optional parameters:
+- contact_site
+- logo_url
+- title
+- description
+- superuser
 
 Example:
 
-    api-cli run module/quay1/configure-module --data '{}'
+    api-cli run module/quay1/configure-module --data '{"host": "quay.gs.nethserver.net"}'
 
 The above command will:
-- start and configure the quay instance
-- (describe configuration process)
-- ...
+- start and configure the quay instance with Let's encrypt certificate
 
 Send a test HTTP request to the quay backend service:
 
-    curl http://127.0.0.1/quay/
+    curl https://quay.gs.nethserver.net
 
 ## Uninstall
 
