@@ -1,0 +1,22 @@
+
+[Unit]
+Description=Podman quay-app.service
+BindsTo=quay.service
+After=quay.service
+After=quay-db.service
+After=quay-redis.service
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=%S/state/environment
+Restart=always
+TimeoutStopSec=70
+ExecStartPre=/bin/rm -f %t/quay-app.pid %t/quay-app.ctr-id
+ExecStart=/usr/bin/podman run --conmon-pidfile %t/quay-app.pid --cidfile %t/quay-app.ctr-id --cgroups=no-conmon --pod-id-file %t/quay.pod-id --replace -d --name quay-app --privileged -v quay-app-data:/datastorage:z -v %S/state/config.yaml:/conf/stack/config.yaml:z ${QUAY_IMAGE}
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/quay-app.ctr-id -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/quay-app.ctr-id
+PIDFile=%t/quay-app.pid
+Type=forking
+
+[Install]
+WantedBy=default.target

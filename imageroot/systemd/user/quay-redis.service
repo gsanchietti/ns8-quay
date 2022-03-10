@@ -1,0 +1,20 @@
+[Unit]
+Description=Podman quay-redis.service
+BindsTo=quay.service
+After=quay.service
+
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=%S/state/environment
+Restart=always
+TimeoutStopSec=70
+ExecStartPre=/bin/rm -f %t/quay-redis.pid %t/quay-redis.ctr-id
+ExecStart=/usr/bin/podman run --conmon-pidfile %t/quay-redis.pid --cidfile %t/quay-redis.ctr-id --cgroups=no-conmon --pod-id-file %t/quay.pod-id --replace -d --name quay-redis -v quay-redis-data:/data ${REDIS_IMAGE} --appendonly yes
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/quay-redis.ctr-id -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/quay-redis.ctr-id
+PIDFile=%t/quay-redis.pid
+Type=forking
+
+[Install]
+WantedBy=default.target

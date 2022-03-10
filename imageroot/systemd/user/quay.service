@@ -1,26 +1,19 @@
-#
-# This systemd unit starts a quay instance using Podman.
-# Most parts of this file come from podman-generate-systemd.
-#
 [Unit]
-Description=quay server
+Description=Podman quay.service
+Requires=quay-app.service quay-db.service quay-redis.service
+Before=quay-app.service quay-db.service quay-redis.service
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 EnvironmentFile=%S/state/environment
-WorkingDirectory=%S/state
 Restart=always
-ExecStartPre=/bin/rm -f %t/quay.pid %t/quay.ctr-id
-ExecStart=/usr/bin/podman run \
-    --detach \
-    --conmon-pidfile=%t/quay.pid \
-    --cidfile=%t/quay.ctr-id \
-    --cgroups=no-conmon \
-    --replace --name=%N \
-    --publish=127.0.0.1:${TCP_PORT}:8080 \
-    ${ECHO_SERVER_IMAGE}
-ExecStop=/usr/bin/podman stop --ignore --cidfile %t/quay.ctr-id -t 10
-ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/quay.ctr-id
+TimeoutStopSec=70
+ExecStartPre=/bin/rm -f %t/quay.pid %t/quay.pod-id
+#ExecStartPre=/usr/bin/podman pod create --infra-conmon-pidfile %t/quay.pid --pod-id-file %t/quay.pod-id --name quay -p 127.0.0.1:${TCP_PORT}:8080 --replace --network=slirp4netns:allow_host_loopback=true --add-host=accountprovider:10.0.2.2
+ExecStartPre=/usr/bin/podman pod create --infra-conmon-pidfile %t/quay.pid --pod-id-file %t/quay.pod-id --name quay -p ${TCP_PORT}:8080 --replace --network=slirp4netns:allow_host_loopback=true --add-host=accountprovider:10.0.2.2
+ExecStart=/usr/bin/podman pod start --pod-id-file %t/quay.pod-id
+ExecStop=/usr/bin/podman pod stop --ignore --pod-id-file %t/quay.pod-id -t 10
+ExecStopPost=/usr/bin/podman pod rm --ignore -f --pod-id-file %t/quay.pod-id
 PIDFile=%t/quay.pid
 Type=forking
 

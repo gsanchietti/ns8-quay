@@ -1,0 +1,21 @@
+[Unit]
+Description=Podman quay-db.service
+BindsTo=quay.service
+After=quay.service
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=%S/state/environment
+Restart=always
+TimeoutStopSec=70
+ExecStartPre=/bin/rm -f %t/quay-db.pid %t/quay-db.ctr-id
+ExecStartPre=/bin/mkdir -p %h/restore/
+ExecStartPre=/bin/touch %h/restore/dump.sql
+ExecStart=/usr/bin/podman run --conmon-pidfile %t/quay-db.pid --cidfile %t/quay-db.ctr-id --cgroups=no-conmon --pod-id-file %t/quay.pod-id --replace -d --name quay-db --env=POSTGRES_PASSWORD=quay --env=POSTGRES_USER=quay -v quay-db-data:/var/lib/postgresql/data ${POSTGRES_IMAGE}
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/quay-db.ctr-id -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/quay-db.ctr-id
+PIDFile=%t/quay-db.pid
+Type=forking
+
+[Install]
+WantedBy=default.target
