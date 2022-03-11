@@ -14,7 +14,7 @@ Optional parameters:
 - logo_url
 - title
 - description
-- superuser
+- superuser: default to `admin`. Register the first user with name `admin`, it will be the superuser.
 
 Example:
 
